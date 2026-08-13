@@ -7,7 +7,8 @@ to `.log` files and includes a few convenient folder operations.
 
 - Export the active document beside its source as `<filename>.log`.
 - Recursively export common text and source files to a sibling `<folder>.logs`
-  directory while preserving the source tree.
+  directory while preserving the source tree. Folder exports run headlessly and
+  never open files in editor tabs.
 - Recursively remove the appended `.log` suffix without overwriting existing
   destination files.
 - Run folder commands from the Command Palette or Explorer context menu.
@@ -27,14 +28,11 @@ The recursive commands can also be run by right-clicking a folder in Explorer.
 When removing suffixes, conflicts are skipped and reported in the
 `Plaintext Export` Output channel.
 
-## Performance and configuration
+## Performance
 
-Directory scanning is parallelized. After opening each document, the extension
-waits briefly for other editor integrations to finish updating its content.
-
-`plaintextExport.documentSettleDelayMs` controls the maximum wait per document
-and defaults to `250`. Set it to `0` for maximum speed when no extra settling
-time is needed.
+Directory scanning and file copying are parallelized. Folder export copies file
+bytes directly through the VS Code file-system API, so it does not activate
+language tooling for each file or change the active editor.
 
 ## Development
 

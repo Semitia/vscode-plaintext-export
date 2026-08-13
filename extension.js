@@ -3,6 +3,7 @@ const path = require('path');
 
 const textEncoder = new TextEncoder();
 const DIRECTORY_SCAN_CONCURRENCY = 32;
+const COPY_CONCURRENCY = 16;
 const RENAME_CONCURRENCY = 16;
 
 const TEXT_EXTENSIONS = new Set([
@@ -27,43 +28,6 @@ function isTextCandidate(name) {
   const lowerName = name.toLowerCase();
   return TEXT_FILENAMES.has(lowerName) ||
     TEXT_EXTENSIONS.has(path.extname(lowerName));
-}
-
-async function readDocumentThroughEditor(uri, settleDelayMilliseconds) {
-  const document = await vscode.workspace.openTextDocument(uri);
-  const initialText = document.getText();
-  const editor = await vscode.window.showTextDocument(document, {
-    preview: true,
-    preserveFocus: false
-  });
-
-  const visibleText = editor.document.getText();
-  if (visibleText !== initialText || settleDelayMilliseconds <= 0) {
-    return visibleText;
-  }
-
-  // Give other editor integrations a brief chance to update the document
-  // after it becomes visible, and continue immediately when they do.
-  await new Promise((resolve) => {
-    let settled = false;
-    const finish = () => {
-      if (settled) {
-        return;
-      }
-      settled = true;
-      subscription.dispose();
-      clearTimeout(timer);
-      resolve();
-    };
-    const subscription = vscode.workspace.onDidChangeTextDocument((event) => {
-      if (event.document.uri.toString() === uri.toString()) {
-        finish();
-      }
-    });
-    const timer = setTimeout(finish, settleDelayMilliseconds);
-  });
-
-  return editor.document.getText();
 }
 
 async function exportActiveDocument() {
@@ -171,45 +135,44 @@ async function exportFolderTree(sourceUri) {
   const sourcePath = sourceUri.fsPath.replace(/[\\/]+$/, '');
   const outputUri = vscode.Uri.file(`${sourcePath}.logs`);
   const files = await collectFiles(sourceUri, isTextCandidate);
-  const settleDelayMilliseconds = Math.max(0, vscode.workspace.getConfiguration('plaintextExport')
-    .get('documentSettleDelayMs', 250));
   let exported = 0;
+  let completed = 0;
   const failures = [];
-  const createdDirectories = new Set();
+  const directoryPromises = new Map();
+
+  const ensureDirectory = async (directory) => {
+    const key = directory.fsPath.toLowerCase();
+    if (!directoryPromises.has(key)) {
+      directoryPromises.set(key, vscode.workspace.fs.createDirectory(directory));
+    }
+    await directoryPromises.get(key);
+  };
 
   await vscode.window.withProgress({
     location: vscode.ProgressLocation.Notification,
     title: 'Exporting text documents',
     cancellable: false
   }, async (progress) => {
-    for (let index = 0; index < files.length; index += 1) {
-      const file = files[index];
-      progress.report({
-        message: `${index + 1}/${files.length}: ${file.relativePath}`,
-        increment: files.length === 0 ? 100 : 100 / files.length
-      });
-
+    await runWithConcurrency(files, COPY_CONCURRENCY, async (file) => {
       try {
-        const text = await readDocumentThroughEditor(file.uri, settleDelayMilliseconds);
         const destination = vscode.Uri.joinPath(
           outputUri,
           ...`${file.relativePath}.log`.split(path.sep)
         );
         const destinationDirectory = vscode.Uri.file(path.dirname(destination.fsPath));
-        const directoryKey = destinationDirectory.fsPath.toLowerCase();
-        if (!createdDirectories.has(directoryKey)) {
-          await vscode.workspace.fs.createDirectory(destinationDirectory);
-          createdDirectories.add(directoryKey);
-        }
-        await vscode.workspace.fs.writeFile(
-          destination,
-          textEncoder.encode(text)
-        );
+        await ensureDirectory(destinationDirectory);
+        await vscode.workspace.fs.copy(file.uri, destination, { overwrite: true });
         exported += 1;
       } catch (error) {
         failures.push(`${file.relativePath}: ${error instanceof Error ? error.message : String(error)}`);
+      } finally {
+        completed += 1;
+        progress.report({
+          message: `${completed}/${files.length}`,
+          increment: files.length === 0 ? 100 : 100 / files.length
+        });
       }
-    }
+    });
   });
 
   const detail = failures.length > 0
