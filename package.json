@@ -1,0 +1,60 @@
+{
+  "name": "plaintext-export",
+  "displayName": "Plaintext Export",
+  "description": "A small VS Code practice extension for exporting text files as .log files.",
+  "version": "0.1.0",
+  "publisher": "semitia",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:plaintextExport.exportActiveDocument",
+    "onCommand:plaintextExport.exportFolderTree",
+    "onCommand:plaintextExport.removeLogSuffixes"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "plaintextExport.exportActiveDocument",
+        "title": "Plaintext Export: Export Active Document to .log"
+      },
+      {
+        "command": "plaintextExport.exportFolderTree",
+        "title": "Plaintext Export: Export Text Folder"
+      },
+      {
+        "command": "plaintextExport.removeLogSuffixes",
+        "title": "Plaintext Export: Remove .log Suffixes in Folder"
+      }
+    ],
+    "configuration": {
+      "title": "Plaintext Export",
+      "properties": {
+        "plaintextExport.documentSettleDelayMs": {
+          "type": "number",
+          "default": 250,
+          "minimum": 0,
+          "description": "Maximum time in milliseconds to wait for editor integrations to update a document after it opens."
+        }
+      }
+    },
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "plaintextExport.exportFolderTree",
+          "when": "explorerResourceIsFolder",
+          "group": "navigation@100"
+        },
+        {
+          "command": "plaintextExport.removeLogSuffixes",
+          "when": "explorerResourceIsFolder",
+          "group": "navigation@101"
+        }
+      ]
+    }
+  }
+}

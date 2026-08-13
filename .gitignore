@@ -1,0 +1,20 @@
+# Dependencies and packaged extensions
+node_modules/
+*.vsix
+
+# Build, test, and coverage output
+out/
+dist/
+coverage/
+.vscode-test/
+
+# Editor and operating-system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs and temporary files
+*.log
+*.tmp
+*.swp
