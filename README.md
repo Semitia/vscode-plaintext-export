@@ -9,6 +9,10 @@ to `.log` files and includes a few convenient folder operations.
 - Recursively export common text and source files to a sibling `<folder>.logs`
   directory while preserving the source tree. Folder exports run headlessly and
   never open files in editor tabs.
+- Include text-based Visual Studio solution, project, MSBuild, resource, and
+  debugger configuration files, such as `.sln`, `.slnf`, `.csproj`,
+  `.vcxproj`, `.props`, `.targets`, `.resx`, and `.natvis`. Binary Visual
+  Studio artifacts such as `.suo` and `.pdb` are excluded.
 - Recursively remove the appended `.log` suffix without overwriting existing
   destination files.
 - Run folder commands from the Command Palette or Explorer context menu.

@@ -2,7 +2,7 @@
   "name": "plaintext-export",
   "displayName": "Plaintext Export",
   "description": "A small VS Code practice extension for exporting text files as .log files.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "publisher": "semitia",
   "engines": {
     "vscode": "^1.75.0"

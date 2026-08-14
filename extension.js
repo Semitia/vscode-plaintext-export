@@ -16,7 +16,19 @@ const TEXT_EXTENSIONS = new Set([
   '.json', '.jsonc', '.xml', '.yaml', '.yml', '.toml', '.ini',
   '.cfg', '.conf', '.properties', '.env', '.csv', '.tsv',
   '.md', '.markdown', '.txt', '.log', '.sql', '.graphql', '.proto',
-  '.cmake', '.gradle', '.dockerfile', '.editorconfig', '.gitignore'
+  '.cmake', '.gradle', '.dockerfile', '.editorconfig', '.gitignore',
+
+  // Visual Studio solutions, projects, and MSBuild files. Binary artifacts
+  // such as .suo, .pdb, .aps, and .ncb are intentionally not included.
+  '.sln', '.slnf', '.slnx',
+  '.csproj', '.fsproj', '.vbproj', '.vcproj', '.vcxproj',
+  '.dbproj', '.sqlproj', '.wixproj', '.vdproj', '.shproj',
+  '.esproj', '.jsproj', '.njsproj', '.pyproj', '.publishproj',
+  '.proj', '.projitems', '.props', '.targets', '.filters', '.user', '.pubxml',
+  '.config', '.manifest', '.settings', '.nuspec',
+  '.resx', '.resw', '.ruleset', '.runsettings', '.vsconfig',
+  '.xaml', '.razor', '.cshtml', '.vbhtml', '.tt', '.t4',
+  '.natvis', '.def', '.idl', '.rc', '.rc2'
 ]);
 
 const TEXT_FILENAMES = new Set([
