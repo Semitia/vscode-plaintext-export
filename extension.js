@@ -1,10 +1,12 @@
 const vscode = require('vscode');
 const path = require('path');
+const { isConservativeTextCandidate } = require('./fileDetection');
 
 const textEncoder = new TextEncoder();
 const DIRECTORY_SCAN_CONCURRENCY = 32;
 const COPY_CONCURRENCY = 16;
 const RENAME_CONCURRENCY = 16;
+const DETECTION_CONCURRENCY = 16;
 
 const TEXT_EXTENSIONS = new Set([
   '.c', '.cc', '.cpp', '.cxx', '.h', '.hh', '.hpp', '.hxx',
@@ -146,10 +148,35 @@ async function exportFolderTree(sourceUri) {
 
   const sourcePath = sourceUri.fsPath.replace(/[\\/]+$/, '');
   const outputUri = vscode.Uri.file(`${sourcePath}.logs`);
-  const files = await collectFiles(sourceUri, isTextCandidate);
+  const scanMode = vscode.workspace
+    .getConfiguration('plaintextExport', sourceUri)
+    .get('folderScanMode', 'knownText');
+  let files;
+  const failures = [];
+
+  if (scanMode === 'conservative') {
+    const discoveredFiles = await collectFiles(sourceUri, () => true);
+    files = [];
+    await runWithConcurrency(
+      discoveredFiles,
+      DETECTION_CONCURRENCY,
+      async (file) => {
+        try {
+          if (await isConservativeTextCandidate(file.uri.fsPath)) {
+            files.push(file);
+          }
+        } catch (error) {
+          failures.push(
+            `${file.relativePath}: content probe failed: ${error instanceof Error ? error.message : String(error)}`
+          );
+        }
+      }
+    );
+  } else {
+    files = await collectFiles(sourceUri, isTextCandidate);
+  }
   let exported = 0;
   let completed = 0;
-  const failures = [];
   const directoryPromises = new Map();
 
   const ensureDirectory = async (directory) => {

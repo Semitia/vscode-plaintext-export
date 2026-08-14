@@ -17,6 +17,24 @@
   ],
   "main": "./extension.js",
   "contributes": {
+    "configuration": {
+      "title": "Plaintext Export",
+      "properties": {
+        "plaintextExport.folderScanMode": {
+          "type": "string",
+          "enum": [
+            "knownText",
+            "conservative"
+          ],
+          "enumDescriptions": [
+            "Export only filenames and extensions known to be text.",
+            "Exclude known binary extensions, then inspect every other file, including extensionless files."
+          ],
+          "default": "knownText",
+          "description": "Controls how files are selected during folder export."
+        }
+      }
+    },
     "commands": [
       {
         "command": "plaintextExport.exportActiveDocument",
@@ -45,5 +63,8 @@
         }
       ]
     }
+  },
+  "scripts": {
+    "test": "node --test"
   }
 }

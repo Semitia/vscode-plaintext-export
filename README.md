@@ -9,6 +9,9 @@ to `.log` files and includes a few convenient folder operations.
 - Recursively export common text and source files to a sibling `<folder>.logs`
   directory while preserving the source tree. Folder exports run headlessly and
   never open files in editor tabs.
+- Optionally use conservative folder scanning. This excludes extensions known
+  to be binary, then samples every other file (including extensionless and
+  unknown-extension files) so uncommon plain-text formats are not missed.
 - Include text-based Visual Studio solution, project, MSBuild, resource, and
   debugger configuration files, such as `.sln`, `.slnf`, `.csproj`,
   `.vcxproj`, `.props`, `.targets`, `.resx`, and `.natvis`. Binary Visual
@@ -31,6 +34,10 @@ Open the Command Palette with `Ctrl+Shift+P`, then run one of these commands:
 The recursive commands can also be run by right-clicking a folder in Explorer.
 When removing suffixes, conflicts are skipped and reported in the
 `Plaintext Export` Output channel.
+
+Set `Plaintext Export: Folder Scan Mode` to `conservative` in VS Code settings
+to enable content probing. The default `knownText` mode is faster and preserves
+the extension allowlist behavior.
 
 ## Performance
 
